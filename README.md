@@ -1,106 +1,84 @@
 # BlueFood SCM - ITPJ2604
 
-Tai lieu tong hop duy nhat cho do an.
+Tài liệu tổng hợp duy nhất cho đồ án.
 
-## 1. Ten de tai
+## 1. Tên đề tài
 
-He thong quan ly chuoi cung ung thuc pham sach (BlueFood SCM).
+Hệ thống quản lý chuỗi cung ứng thực phẩm sạch (BlueFood SCM).
 
-## 2. Noi dung
+## 2. Nội dung
 
-He thong truy xuat nguon goc lo hang tu nong trai den cua hang, su dung QR de tra cuu cong khai, ghi nhan lich su su kien va audit log theo huong append-only.
+Hệ thống truy xuất nguồn gốc lô hàng từ nông trại đến cửa hàng, sử dụng QR để truy cập công khai, ghi nhận lịch sử sự kiện và audit log theo hướng append-only.
 
-## 3. Chuc nang chinh
+## 3. Chức năng chính
 
-- Quan ly lo hang: tao lo, sinh QR token va trace URL.
-- Theo doi chuoi cung ung: them su kien (CREATED, SHIPPED, RECEIVED...).
-- Tra cuu truy xuat: theo batch code hoac theo QR token.
-- Quan ly chung chi: tao chung chi va gan vao lo hang.
-- Audit log: ghi nhan thay doi, khong cho sua/xoa bang chuc nang ung dung.
-- Trang public cho dien thoai: `/trace/public/{qrToken}`.
+- Quản lý lô hàng: tạo lô, sinh QR token và trace URL
+- Theo dõi chuỗi cung ứng: thêm sự kiện (CREATED, SHIPPED, RECEIVED...)
+- Truy cứu truy xuất: theo batch code hoặc QR token
+- Quản lý chứng chỉ: tạo và gán vào lô hàng
+- Audit log: ghi nhận thay đổi, không cho sửa/xóa qua ứng dụng
+- Trang công khai cho điện thoại: `/trace/public/{qrToken}`
 
-## 4. Cong nghe su dung
+## 4. Công nghệ sử dụng
 
-- Backend: ASP.NET Core 8 Web API.
-- Frontend: React + TypeScript + Vite.
-- Database: SQL Server.
-- Mobile scan module (tu chon): Flutter (`bluefood_scan_app`) dung lai API hien tai.
+- Backend: ASP.NET Core 8 Web API
+- Frontend: React + TypeScript + Vite
+- Database: SQL Server
+- Mobile (tùy chọn): Flutter (`bluefood_scan_app`)
 
-## 5. Cau truc thu muc
+## 5. Cấu hình khi clone lần đầu
 
-- Backend API: `BlueFood_Api/`
-- Frontend web: `../BlueFood_frontend/`
-- SQL scripts: `Database/`
-
-## 6. Cau hinh khi dao tao/dua len git (quan trong)
-
-Neu ban clone project tren may tinh khac:
-
-**Backend**: Tu dong detect LAN IP, khong can cau hinh.
-- Neu muon chi dinh URL, tao file `.env` voi:
+**Backend**: Tự động detect LAN IP, không cần cấu hình.
+- Nếu muốn override, tạo `.env` với:
   ```
   BLUEFOOD_PUBLIC_BASE_URL=http://{YOUR_LAN_IP}:5085/t/
   ```
 
-**Frontend**: Phai cau hinh API endpoint theo may tinh moi:
-1. Tao file `.env` tu `.env.example`
-2. Sua gia tri dung IP cua ban:
+**Frontend**: Cần cấu hình endpoint:
+1. Copy `.env.example` → `.env`
+2. Sửa giá trị với IP của bạn:
    ```
    VITE_API_BASE_URL=http://{YOUR_LAN_IP}:5085
    ```
-   (Vi du: `http://192.168.1.5:5085`)
 
-## 7. Cach mo demo (ngan gon)
+## 6. Chạy demo
 
-### Buoc 1: Chay backend
-
-Mo PowerShell tai thu muc `BlueFood_backend`:
-
+**Bước 1: Backend** (PowerShell tại `BlueFood_backend`)
 ```powershell
 dotnet restore BlueFood_Api/BlueFood.Api.csproj
 $env:ASPNETCORE_ENVIRONMENT='Development'
 dotnet run --project BlueFood_Api/BlueFood.Api.csproj --urls "http://0.0.0.0:5085"
 ```
 
-### Buoc 2: Chay frontend
-
-Mo PowerShell khac tai thu muc `BlueFood_frontend`:
-
+**Bước 2: Frontend** (PowerShell khác tại `BlueFood_frontend`)
 ```powershell
 npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-### Buoc 3: Mo man hinh demo
-
+**Bước 3: Truy cập**
 - Web: `http://localhost:5173`
 - Swagger: `http://localhost:5085/swagger`
 
-### Buoc 4: Luong demo nhanh
+**Bước 4: Demo workflow**
+1. Tạo batch + QR trên web
+2. Điện thoại cùng Wi-Fi, quét QR trên màn hình laptop
+3. Điện thoại mở URL public trace để xem thông tin lô hàng
+4. (Tùy chọn) Thêm sự kiện SHIPPED, xem timeline cập nhật
+5. (Tùy chọn) Tạo chứng chỉ, gán vào batch, xem audit log
 
-1. Tao batch + QR tren web.
-2. Dung camera dien thoai quet QR hien tren man hinh laptop.
-3. Dien thoai mo URL public trace va hien thong tin lo hang.
-4. (Tuy chon) Bam `Ghi nhan SHIPPED`, sau do tai trace de thay timeline cap nhat.
-5. (Tuy chon) Tao chung chi, gan vao batch, xem danh sach va audit.
+## 7. Lưu ý khi quét QR bằng điện thoại
 
-## 8. Luu y khi quet QR bang dien thoai
+- Điện thoại và máy tính phải cùng Wi-Fi
+- Backend phải chạy với `0.0.0.0:5085` (không chỉ localhost)
+- Firewall Windows cần mở cổng TCP 5085
+- Khi đổi mạng, cập nhật IP mới trong trace URL
 
-- Dien thoai va may tinh phai cung Wi-Fi.
-- Backend phai chay voi `0.0.0.0:5085` (khong chi localhost).
-- Firewall Windows can mo cong TCP 5085.
-- Neu doi mang, dung LAN IP moi trong trace URL.
+## 8. Endpoint chính
 
-## 9. Endpoint chinh
-
-- `POST /api/batches`
-- `POST /api/batches/{batchCode}/events`
-- `POST /api/certificates`
-- `POST /api/batches/{batchCode}/certificates`
-- `GET /api/batches/{batchCode}/trace`
-- `GET /api/batches/{batchCode}/audit`
-- `GET /api/trace/{qrToken}`
-- `GET /api/trace/{qrToken}/qrcode`
-- `GET /trace/public/{qrToken}`
-
-## 10. Giao diện
+- `POST /api/batches` - Tạo lô hàng
+- `POST /api/batches/{batchCode}/events` - Thêm sự kiện
+- `POST /api/certificates` - Tạo chứng chỉ
+- `GET /api/batches/{batchCode}/trace` - Lấy timeline
+- `GET /api/batches/{batchCode}/audit` - Audit log
+- `GET /trace/public/{qrToken}` - Trang công khai cho điện thoại
