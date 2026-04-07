@@ -1,6 +1,7 @@
-# BlueFood SCM - ITPJ2604
+# IS208.Q21 - Nhóm Horizon
 
-Tài liệu tổng hợp duy nhất cho đồ án.
+Thành viên: Bá Khang, Duy Tài, Mậu Anh, Phương Anh, Quốc Đạt (Nhóm trưởng).
+[Website giới thiệu nhóm (vào bằng mail trường)](https://sites.google.com/gm.uit.edu.vn/horizon/trang-ch%E1%BB%A7?authuser=2&pli=1)
 
 ## 1. Tên đề tài
 
