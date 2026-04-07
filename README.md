@@ -45,9 +45,7 @@ Hệ thống truy xuất nguồn gốc lô hàng từ nông trại đến cửa 
 
 **Bước 1: Backend** (PowerShell tại `BlueFood_backend`)
 ```powershell
-dotnet restore BlueFood_Api/BlueFood.Api.csproj
-$env:ASPNETCORE_ENVIRONMENT='Development'
-dotnet run --project BlueFood_Api/BlueFood.Api.csproj --urls "http://0.0.0.0:5085"
+dotnet run 
 ```
 
 **Bước 2: Frontend** (PowerShell khác tại `BlueFood_frontend`)
@@ -82,3 +80,6 @@ npm run dev -- --host 0.0.0.0 --port 5173
 - `GET /api/batches/{batchCode}/trace` - Lấy timeline
 - `GET /api/batches/{batchCode}/audit` - Audit log
 - `GET /trace/public/{qrToken}` - Trang công khai cho điện thoại
+
+## 9. Các Trang khác
+[Frontend](https://github.com/boakang/BlueFood_frontend)
