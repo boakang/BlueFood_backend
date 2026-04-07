@@ -1,0 +1,9 @@
+TABLE_SCHEMA|TABLE_NAME
+------------|----------
+audit|AuditLogs
+scm|BatchCertificates
+scm|Batches
+scm|BatchEvents
+scm|BatchQRCodes
+scm|Certificates
+scm|Partners

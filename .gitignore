@@ -1,0 +1,19 @@
+# Sensitive environment and local config
+.env
+.env.*
+!.env.example
+
+# Workspace/project metadata
+.github/
+.vscode/
+
+# .NET build output
+**/bin/
+**/obj/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

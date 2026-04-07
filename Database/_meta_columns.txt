@@ -1,0 +1,67 @@
+TABLE_SCHEMA|TABLE_NAME|ORDINAL_POSITION|COLUMN_NAME|DATA_TYPE|CHARACTER_MAXIMUM_LENGTH|NUMERIC_PRECISION|NUMERIC_SCALE|IS_NULLABLE|COLUMN_DEFAULT
+------------|----------|----------------|-----------|---------|------------------------|-----------------|-------------|-----------|--------------
+audit|AuditLogs|1|AuditId|bigint|NULL|19|0|NO|
+audit|AuditLogs|2|EntityName|nvarchar|100|NULL|NULL|NO|
+audit|AuditLogs|3|EntityId|nvarchar|100|NULL|NULL|NO|
+audit|AuditLogs|4|ActionType|nvarchar|30|NULL|NULL|NO|
+audit|AuditLogs|5|ActionAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+audit|AuditLogs|6|Actor|nvarchar|100|NULL|NULL|NO|
+audit|AuditLogs|7|PayloadText|nvarchar|-1|NULL|NULL|YES|
+audit|AuditLogs|8|PrevHash|varbinary|32|NULL|NULL|YES|
+audit|AuditLogs|9|ThisHash|varbinary|32|NULL|NULL|NO|
+scm|BatchCertificates|1|BatchCertificateId|bigint|NULL|19|0|NO|
+scm|BatchCertificates|2|BatchId|uniqueidentifier|NULL|NULL|NULL|NO|
+scm|BatchCertificates|3|CertificateId|bigint|NULL|19|0|NO|
+scm|BatchCertificates|4|AttachedAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|BatchCertificates|5|AttachedBy|nvarchar|100|NULL|NULL|NO|
+scm|Batches|1|BatchId|uniqueidentifier|NULL|NULL|NULL|NO|(newid())
+scm|Batches|2|BatchCode|nvarchar|40|NULL|NULL|NO|
+scm|Batches|3|ProductName|nvarchar|200|NULL|NULL|NO|
+scm|Batches|4|FarmPartnerId|int|NULL|10|0|YES|
+scm|Batches|5|CurrentStatus|nvarchar|30|NULL|NULL|NO|(N'CREATED')
+scm|Batches|6|ProductionDate|date|NULL|NULL|NULL|YES|
+scm|Batches|7|ExpiryDate|date|NULL|NULL|NULL|YES|
+scm|Batches|8|CreatedBy|nvarchar|100|NULL|NULL|NO|
+scm|Batches|9|CreatedAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|BatchEvents|1|BatchEventId|bigint|NULL|19|0|NO|
+scm|BatchEvents|2|BatchId|uniqueidentifier|NULL|NULL|NULL|NO|
+scm|BatchEvents|3|EventNo|int|NULL|10|0|NO|
+scm|BatchEvents|4|EventType|nvarchar|30|NULL|NULL|NO|
+scm|BatchEvents|5|FromPartnerId|int|NULL|10|0|YES|
+scm|BatchEvents|6|ToPartnerId|int|NULL|10|0|YES|
+scm|BatchEvents|7|LocationText|nvarchar|200|NULL|NULL|YES|
+scm|BatchEvents|8|NoteText|nvarchar|500|NULL|NULL|YES|
+scm|BatchEvents|9|EventTime|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|BatchEvents|10|CreatedBy|nvarchar|100|NULL|NULL|NO|
+scm|BatchQRCodes|1|BatchId|uniqueidentifier|NULL|NULL|NULL|NO|
+scm|BatchQRCodes|2|QRToken|nvarchar|80|NULL|NULL|NO|
+scm|BatchQRCodes|3|TraceUrl|nvarchar|500|NULL|NULL|NO|
+scm|BatchQRCodes|4|CreatedAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|Certificates|1|CertificateId|bigint|NULL|19|0|NO|
+scm|Certificates|2|CertificateCode|nvarchar|60|NULL|NULL|NO|
+scm|Certificates|3|CertificateName|nvarchar|200|NULL|NULL|NO|
+scm|Certificates|4|IssuedBy|nvarchar|200|NULL|NULL|YES|
+scm|Certificates|5|IssuedDate|date|NULL|NULL|NULL|YES|
+scm|Certificates|6|ExpiredDate|date|NULL|NULL|NULL|YES|
+scm|Certificates|7|FileUrl|nvarchar|500|NULL|NULL|YES|
+scm|Certificates|8|CreatedAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|Partners|1|PartnerId|int|NULL|10|0|NO|
+scm|Partners|2|PartnerType|tinyint|NULL|3|0|NO|
+scm|Partners|3|PartnerCode|nvarchar|50|NULL|NULL|NO|
+scm|Partners|4|PartnerName|nvarchar|200|NULL|NULL|NO|
+scm|Partners|5|IsActive|bit|NULL|NULL|NULL|NO|((1))
+scm|Partners|6|CreatedAt|datetime2|NULL|NULL|NULL|NO|(CONVERT([datetime2](3),((sysutcdatetime() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time')))
+scm|vw_BatchTrace|1|BatchCode|nvarchar|40|NULL|NULL|NO|
+scm|vw_BatchTrace|2|ProductName|nvarchar|200|NULL|NULL|NO|
+scm|vw_BatchTrace|3|CurrentStatus|nvarchar|30|NULL|NULL|NO|
+scm|vw_BatchTrace|4|ProductionDate|date|NULL|NULL|NULL|YES|
+scm|vw_BatchTrace|5|ExpiryDate|date|NULL|NULL|NULL|YES|
+scm|vw_BatchTrace|6|QRToken|nvarchar|80|NULL|NULL|YES|
+scm|vw_BatchTrace|7|TraceUrl|nvarchar|500|NULL|NULL|YES|
+scm|vw_BatchTrace|8|EventNo|int|NULL|10|0|YES|
+scm|vw_BatchTrace|9|EventType|nvarchar|30|NULL|NULL|YES|
+scm|vw_BatchTrace|10|EventTime|datetime2|NULL|NULL|NULL|YES|
+scm|vw_BatchTrace|11|FromPartnerName|nvarchar|200|NULL|NULL|YES|
+scm|vw_BatchTrace|12|ToPartnerName|nvarchar|200|NULL|NULL|YES|
+scm|vw_BatchTrace|13|LocationText|nvarchar|200|NULL|NULL|YES|
+scm|vw_BatchTrace|14|NoteText|nvarchar|500|NULL|NULL|YES|
