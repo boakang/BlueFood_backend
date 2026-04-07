@@ -47,23 +47,25 @@ erDiagram
         nvarchar(500) NoteText
         datetime2(3) EventTime
         nvarchar(100) CreatedBy
-    }
+        ## Sơ đồ ERD
+
+        Các tên bảng và tên cột trong sơ đồ giữ nguyên theo schema SQL, chỉ Việt hóa phần mô tả quan hệ.
 
     BatchQRCodes {
         uniqueidentifier BatchId PK, FK
-        nvarchar(80) QRToken UK
+            Partners ||--o{ Batches : "Đối tác nông trại"
         nvarchar(500) TraceUrl
-        datetime2(3) CreatedAt
+            Batches ||--o{ BatchEvents : "Lô hàng"
     }
-
+            Partners ||--o{ BatchEvents : "Đối tác nguồn"
     Certificates {
-        bigint CertificateId PK
+            Partners ||--o{ BatchEvents : "Đối tác đích"
         nvarchar(60) CertificateCode UK
-        nvarchar(200) CertificateName
+            Batches ||--|| BatchQRCodes : "Mã lô"
         nvarchar(200) IssuedBy
-        date IssuedDate
+            Batches ||--o{ BatchCertificates : "Mã lô"
         date ExpiredDate
-        nvarchar(500) FileUrl
+            Certificates ||--o{ BatchCertificates : "Mã chứng chỉ"
         datetime2(3) CreatedAt
     }
 
@@ -105,100 +107,100 @@ erDiagram
 ## Table Descriptions
 
 ### `scm.Partners`
-Purpose: Master data of supply-chain actors (farm, transport, warehouse, store).
+Mục đích: Dữ liệu danh mục của các tác nhân trong chuỗi cung ứng (nông trại, vận chuyển, kho, cửa hàng).
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| PartnerId | int | No | PK | Internal partner identifier. |
-| PartnerType | tinyint | No |  | Partner category (farm/transport/warehouse/store). |
-| PartnerCode | nvarchar(50) | No | UK | Business partner code. |
-| PartnerName | nvarchar(200) | No |  | Display name. |
-| IsActive | bit | No |  | Active flag. |
-| CreatedAt | datetime2(3) | No |  | Created timestamp. |
+| PartnerId | int | No | PK | Mã định danh nội bộ của đối tác. |
+| PartnerType | tinyint | No |  | Loại đối tác (nông trại/vận chuyển/kho/cửa hàng). |
+| PartnerCode | nvarchar(50) | No | UK | Mã đối tác nghiệp vụ. |
+| PartnerName | nvarchar(200) | No |  | Tên hiển thị. |
+| IsActive | bit | No |  | Cờ trạng thái đang hoạt động. |
+| CreatedAt | datetime2(3) | No |  | Thời điểm tạo. |
 
 ### `scm.Batches`
-Purpose: Core batch entity for traceability.
+Mục đích: Thực thể lô hàng trung tâm phục vụ truy xuất nguồn gốc.
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| BatchId | uniqueidentifier | No | PK | Internal batch identifier (GUID). |
-| BatchCode | nvarchar(40) | No | UK | Human-readable unique batch code. |
-| ProductName | nvarchar(200) | No |  | Product label for the batch. |
-| FarmPartnerId | int | Yes | FK | Producing farm partner. |
-| CurrentStatus | nvarchar(30) | No |  | Latest status snapshot. |
-| ProductionDate | date | Yes |  | Production date. |
-| ExpiryDate | date | Yes |  | Expiration date. |
-| CreatedBy | nvarchar(100) | No |  | User/account that created batch. |
-| CreatedAt | datetime2(3) | No |  | Created timestamp. |
+| BatchId | uniqueidentifier | No | PK | Mã định danh nội bộ của lô hàng (GUID). |
+| BatchCode | nvarchar(40) | No | UK | Mã lô hàng duy nhất, dễ đọc. |
+| ProductName | nvarchar(200) | No |  | Tên sản phẩm của lô hàng. |
+| FarmPartnerId | int | Yes | FK | Đối tác nông trại sản xuất. |
+| CurrentStatus | nvarchar(30) | No |  | Trạng thái hiện tại gần nhất. |
+| ProductionDate | date | Yes |  | Ngày sản xuất. |
+| ExpiryDate | date | Yes |  | Ngày hết hạn. |
+| CreatedBy | nvarchar(100) | No |  | Người/tài khoản tạo lô. |
+| CreatedAt | datetime2(3) | No |  | Thời điểm tạo. |
 
 ### `scm.BatchEvents`
-Purpose: Immutable timeline events of each batch.
+Mục đích: Các sự kiện theo dòng thời gian của từng lô hàng, không cho sửa/xóa.
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| BatchEventId | bigint | No | PK | Event row identifier. |
-| BatchId | uniqueidentifier | No | FK | Linked batch. |
-| EventNo | int | No | UK(part) | Sequential event number per batch. |
-| EventType | nvarchar(30) | No |  | Event action type (CREATED, SHIPPED, RECEIVED, etc). |
-| FromPartnerId | int | Yes | FK | Source partner. |
-| ToPartnerId | int | Yes | FK | Destination partner. |
-| LocationText | nvarchar(200) | Yes |  | Free-text location. |
-| NoteText | nvarchar(500) | Yes |  | Event note. |
-| EventTime | datetime2(3) | No |  | Event timestamp. |
-| CreatedBy | nvarchar(100) | No |  | Event actor. |
+| BatchEventId | bigint | No | PK | Mã định danh dòng sự kiện. |
+| BatchId | uniqueidentifier | No | FK | Lô hàng liên kết. |
+| EventNo | int | No | UK(part) | Số thứ tự sự kiện trong từng lô. |
+| EventType | nvarchar(30) | No |  | Loại sự kiện (CREATED, SHIPPED, RECEIVED, ...). |
+| FromPartnerId | int | Yes | FK | Đối tác nguồn. |
+| ToPartnerId | int | Yes | FK | Đối tác đích. |
+| LocationText | nvarchar(200) | Yes |  | Địa điểm dạng tự do. |
+| NoteText | nvarchar(500) | Yes |  | Ghi chú của sự kiện. |
+| EventTime | datetime2(3) | No |  | Thời điểm xảy ra sự kiện. |
+| CreatedBy | nvarchar(100) | No |  | Người thực hiện sự kiện. |
 
 ### `scm.BatchQRCodes`
-Purpose: One QR identity and trace URL per batch.
+Mục đích: Mỗi lô có một QR token và một đường dẫn truy xuất riêng.
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| BatchId | uniqueidentifier | No | PK, FK | Same batch id, one-to-one mapping. |
-| QRToken | nvarchar(80) | No | UK | Unique token encoded in QR. |
-| TraceUrl | nvarchar(500) | No |  | Public trace endpoint URL. |
-| CreatedAt | datetime2(3) | No |  | Created timestamp. |
+| BatchId | uniqueidentifier | No | PK, FK | Cùng mã lô, quan hệ 1-1. |
+| QRToken | nvarchar(80) | No | UK | Token duy nhất được mã hóa trong QR. |
+| TraceUrl | nvarchar(500) | No |  | Đường dẫn truy xuất công khai. |
+| CreatedAt | datetime2(3) | No |  | Thời điểm tạo. |
 
 ### `scm.Certificates`
-Purpose: Certificate master records (e.g., VietGAP).
+Mục đích: Danh mục chứng chỉ gốc (ví dụ: VietGAP).
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| CertificateId | bigint | No | PK | Certificate row identifier. |
-| CertificateCode | nvarchar(60) | No | UK | Business certificate code. |
-| CertificateName | nvarchar(200) | No |  | Certificate display name. |
-| IssuedBy | nvarchar(200) | Yes |  | Issuer organization. |
-| IssuedDate | date | Yes |  | Issue date. |
-| ExpiredDate | date | Yes |  | Expiration date. |
-| FileUrl | nvarchar(500) | Yes |  | File storage URL. |
-| CreatedAt | datetime2(3) | No |  | Created timestamp. |
+| CertificateId | bigint | No | PK | Mã định danh dòng chứng chỉ. |
+| CertificateCode | nvarchar(60) | No | UK | Mã chứng chỉ nghiệp vụ. |
+| CertificateName | nvarchar(200) | No |  | Tên hiển thị của chứng chỉ. |
+| IssuedBy | nvarchar(200) | Yes |  | Đơn vị cấp. |
+| IssuedDate | date | Yes |  | Ngày cấp. |
+| ExpiredDate | date | Yes |  | Ngày hết hạn. |
+| FileUrl | nvarchar(500) | Yes |  | URL lưu tệp chứng chỉ. |
+| CreatedAt | datetime2(3) | No |  | Thời điểm tạo. |
 
 ### `scm.BatchCertificates`
-Purpose: Immutable attachment of certificates to batches.
+Mục đích: Gắn chứng chỉ vào lô hàng theo kiểu không cho sửa/xóa.
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| BatchCertificateId | bigint | No | PK | Attachment row identifier. |
-| BatchId | uniqueidentifier | No | FK, UK(part) | Linked batch. |
-| CertificateId | bigint | No | FK, UK(part) | Linked certificate. |
-| AttachedAt | datetime2(3) | No |  | Attachment timestamp. |
-| AttachedBy | nvarchar(100) | No |  | Actor who attached certificate. |
+| BatchCertificateId | bigint | No | PK | Mã định danh dòng gắn kết. |
+| BatchId | uniqueidentifier | No | FK, UK(part) | Lô hàng được gắn. |
+| CertificateId | bigint | No | FK, UK(part) | Chứng chỉ được gắn. |
+| AttachedAt | datetime2(3) | No |  | Thời điểm gắn. |
+| AttachedBy | nvarchar(100) | No |  | Người thực hiện gắn chứng chỉ. |
 
 ### `audit.AuditLogs`
-Purpose: Append-only audit trail with hash-chain fields.
+Mục đích: Nhật ký audit chỉ ghi thêm, có trường băm chuỗi để kiểm tra toàn vẹn.
 
 | Column | Type | Null | Key | Description |
 |---|---|---|---|---|
-| AuditId | bigint | No | PK | Audit row identifier. |
-| EntityName | nvarchar(100) | No |  | Logical entity type (BATCH, BATCH_EVENT, etc). |
-| EntityId | nvarchar(100) | No |  | Entity identifier in text form. |
-| ActionType | nvarchar(30) | No |  | Audit action (INSERT, STATUS_CHANGE, ATTACH_CERT). |
-| ActionAt | datetime2(3) | No |  | Action timestamp. |
-| Actor | nvarchar(100) | No |  | User/account performing action. |
-| PayloadText | nvarchar(max) | Yes |  | Serialized audit payload. |
-| PrevHash | varbinary(32) | Yes |  | Previous hash in chain. |
-| ThisHash | varbinary(32) | No |  | Current hash in chain. |
+| AuditId | bigint | No | PK | Mã định danh dòng audit. |
+| EntityName | nvarchar(100) | No |  | Loại thực thể logic (BATCH, BATCH_EVENT, ...). |
+| EntityId | nvarchar(100) | No |  | Mã thực thể dưới dạng văn bản. |
+| ActionType | nvarchar(30) | No |  | Hành động audit (INSERT, STATUS_CHANGE, ATTACH_CERT). |
+| ActionAt | datetime2(3) | No |  | Thời điểm thực hiện. |
+| Actor | nvarchar(100) | No |  | Người/tài khoản thực hiện. |
+| PayloadText | nvarchar(max) | Yes |  | Dữ liệu payload đã tuần tự hóa. |
+| PrevHash | varbinary(32) | Yes |  | Mã băm trước đó trong chuỗi. |
+| ThisHash | varbinary(32) | No |  | Mã băm hiện tại. |
 
 ## View (Read Model)
 
 ### `scm.vw_BatchTrace`
-Purpose: Denormalized read model for trace timeline by joining batches, events, partners, and QR data.
-Main columns: `BatchCode`, `ProductName`, `CurrentStatus`, `QRToken`, `TraceUrl`, `EventNo`, `EventType`, `EventTime`, partner names, and event note/location.
+Mục đích: Mô hình đọc đã tổng hợp để xem timeline truy xuất, ghép từ lô hàng, sự kiện, đối tác và dữ liệu QR.
+Các cột chính: `BatchCode`, `ProductName`, `CurrentStatus`, `QRToken`, `TraceUrl`, `EventNo`, `EventType`, `EventTime`, tên đối tác, ghi chú và địa điểm sự kiện.
