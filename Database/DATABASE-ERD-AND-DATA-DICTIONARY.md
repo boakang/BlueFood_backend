@@ -47,25 +47,23 @@ erDiagram
         nvarchar(500) NoteText
         datetime2(3) EventTime
         nvarchar(100) CreatedBy
-        ## Sơ đồ ERD
-
-        Các tên bảng và tên cột trong sơ đồ giữ nguyên theo schema SQL, chỉ Việt hóa phần mô tả quan hệ.
+    }
 
     BatchQRCodes {
         uniqueidentifier BatchId PK, FK
-            Partners ||--o{ Batches : "Đối tác nông trại"
+        nvarchar(80) QRToken UK
         nvarchar(500) TraceUrl
-            Batches ||--o{ BatchEvents : "Lô hàng"
+        datetime2(3) CreatedAt
     }
-            Partners ||--o{ BatchEvents : "Đối tác nguồn"
+
     Certificates {
-            Partners ||--o{ BatchEvents : "Đối tác đích"
+        bigint CertificateId PK
         nvarchar(60) CertificateCode UK
-            Batches ||--|| BatchQRCodes : "Mã lô"
+        nvarchar(200) CertificateName
         nvarchar(200) IssuedBy
-            Batches ||--o{ BatchCertificates : "Mã lô"
+        date IssuedDate
         date ExpiredDate
-            Certificates ||--o{ BatchCertificates : "Mã chứng chỉ"
+        nvarchar(500) FileUrl
         datetime2(3) CreatedAt
     }
 
