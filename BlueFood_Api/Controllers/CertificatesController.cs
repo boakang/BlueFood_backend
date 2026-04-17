@@ -1,5 +1,6 @@
 using BlueFood.Api.Models;
 using BlueFood.Api.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlueFood.Api.Controllers;
@@ -23,7 +24,14 @@ public class CertificatesController : ControllerBase
             return BadRequest("CertificateCode, CertificateName, Actor are required.");
         }
 
-        var certificateId = await _batchService.CreateCertificateAsync(request, cancellationToken);
-        return Ok(new { certificateId });
+        try
+        {
+            var certificateId = await _batchService.CreateCertificateAsync(request, cancellationToken);
+            return Ok(new { certificateId });
+        }
+        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        {
+            return Conflict("Mã chứng chỉ đã tồn tại. Hãy chọn chứng chỉ có sẵn để gắn vào lô hàng.");
+        }
     }
 }

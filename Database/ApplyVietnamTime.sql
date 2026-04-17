@@ -167,5 +167,236 @@ BEGIN
 END
 GO
 
+CREATE OR ALTER PROCEDURE scm.usp_GetPartners
+    @PartnerType TINYINT = NULL,
+    @OnlyActive BIT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        p.PartnerId,
+        p.PartnerType,
+        p.PartnerCode,
+        p.PartnerName,
+        p.IsActive
+    FROM scm.Partners p
+    WHERE (@OnlyActive = 0 OR p.IsActive = 1)
+      AND (@PartnerType IS NULL OR p.PartnerType = @PartnerType)
+    ORDER BY p.PartnerType, p.PartnerName;
+END
+GO
+
+CREATE OR ALTER PROCEDURE scm.usp_GetDashboardOverview
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TotalBatches INT = (SELECT COUNT(1) FROM scm.Batches);
+    DECLARE @TotalTraceEvents INT = (SELECT COUNT(1) FROM scm.BatchEvents);
+    DECLARE @TotalCertificatesAttached INT = (SELECT COUNT(1) FROM scm.BatchCertificates);
+
+    SELECT
+        @TotalBatches AS TotalBatches,
+        @TotalTraceEvents AS TotalTraceEvents,
+        @TotalCertificatesAttached AS TotalCertificatesAttached;
+
+    SELECT
+        be.EventType AS Label,
+        COUNT(1) AS Value
+    FROM scm.BatchEvents be
+    GROUP BY be.EventType
+    ORDER BY COUNT(1) DESC, be.EventType;
+
+    ;WITH EventAgg AS
+    (
+        SELECT
+            CONVERT(VARCHAR(10), CAST(be.EventTime AS DATE), 23) AS Label,
+            COUNT(1) AS Value
+        FROM scm.BatchEvents be
+        GROUP BY CAST(be.EventTime AS DATE)
+    )
+    SELECT TOP (7)
+        ea.Label,
+        ea.Value
+    FROM EventAgg ea
+    ORDER BY ea.Label DESC;
+END
+GO
+
+CREATE OR ALTER PROCEDURE scm.usp_GetBatchManagement
+    @Keyword NVARCHAR(100) = NULL,
+    @Take INT = 100
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Take IS NULL OR @Take <= 0
+        SET @Take = 100;
+
+    ;WITH EventAgg AS
+    (
+        SELECT
+            be.BatchId,
+            COUNT(1) AS EventCount,
+            MAX(be.EventTime) AS LastEventTime
+        FROM scm.BatchEvents be
+        GROUP BY be.BatchId
+    ),
+    CertAgg AS
+    (
+        SELECT
+            bc.BatchId,
+            COUNT(1) AS CertificateCount,
+            MAX(c.CertificateName) AS CertificateName
+        FROM scm.BatchCertificates bc
+        LEFT JOIN scm.Certificates c ON c.CertificateId = bc.CertificateId
+        GROUP BY bc.BatchId
+    )
+    SELECT TOP (@Take)
+        b.BatchId,
+        b.BatchCode,
+        b.ProductName,
+        b.CurrentStatus,
+        b.CreatedBy,
+        b.CreatedAt,
+        p.PartnerName AS FarmPartnerName,
+        ISNULL(ea.EventCount, 0) AS EventCount,
+        ea.LastEventTime,
+        ISNULL(ca.CertificateCount, 0) AS CertificateCount,
+        ca.CertificateName
+    FROM scm.Batches b
+    LEFT JOIN scm.Partners p ON p.PartnerId = b.FarmPartnerId
+    LEFT JOIN EventAgg ea ON ea.BatchId = b.BatchId
+    LEFT JOIN CertAgg ca ON ca.BatchId = b.BatchId
+    WHERE @Keyword IS NULL
+       OR b.BatchCode LIKE N'%' + @Keyword + N'%'
+       OR b.ProductName LIKE N'%' + @Keyword + N'%'
+       OR b.CurrentStatus LIKE N'%' + @Keyword + N'%'
+    ORDER BY b.CreatedAt DESC;
+END
+GO
+
+CREATE OR ALTER PROCEDURE scm.usp_GetCertificateManagement
+    @Keyword NVARCHAR(100) = NULL,
+    @Take INT = 100
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Take IS NULL OR @Take <= 0
+        SET @Take = 100;
+
+    ;WITH CertAgg AS
+    (
+        SELECT
+            bc.CertificateId,
+            COUNT(1) AS AttachedBatchCount,
+            MAX(bc.AttachedAt) AS LastAttachedAt
+        FROM scm.BatchCertificates bc
+        GROUP BY bc.CertificateId
+    )
+    SELECT TOP (@Take)
+        c.CertificateId,
+        c.CertificateCode,
+        c.CertificateName,
+        c.IssuedBy,
+        c.IssuedDate,
+        c.ExpiredDate,
+        c.FileUrl,
+        c.CreatedAt,
+        ISNULL(ca.AttachedBatchCount, 0) AS AttachedBatchCount,
+        ca.LastAttachedAt
+    FROM scm.Certificates c
+    LEFT JOIN CertAgg ca ON ca.CertificateId = c.CertificateId
+    WHERE @Keyword IS NULL
+       OR c.CertificateCode LIKE N'%' + @Keyword + N'%'
+       OR c.CertificateName LIKE N'%' + @Keyword + N'%'
+       OR ISNULL(c.IssuedBy, N'') LIKE N'%' + @Keyword + N'%'
+    ORDER BY c.CreatedAt DESC;
+END
+GO
+
+IF OBJECT_ID(N'scm.TR_BatchCertificates_BlockUpdateDelete', N'TR') IS NOT NULL
+    DROP TRIGGER scm.TR_BatchCertificates_BlockUpdateDelete;
+GO
+
+;WITH Dedup AS
+(
+    SELECT
+        bc.BatchCertificateId,
+        ROW_NUMBER() OVER (PARTITION BY bc.BatchId ORDER BY bc.AttachedAt DESC, bc.BatchCertificateId DESC) AS RowNo
+    FROM scm.BatchCertificates bc
+)
+DELETE bc
+FROM scm.BatchCertificates bc
+INNER JOIN Dedup d ON d.BatchCertificateId = bc.BatchCertificateId
+WHERE d.RowNo > 1;
+GO
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.key_constraints kc
+    WHERE kc.parent_object_id = OBJECT_ID(N'scm.BatchCertificates')
+      AND kc.name = N'UQ_BatchCertificates'
+)
+BEGIN
+    ALTER TABLE scm.BatchCertificates DROP CONSTRAINT UQ_BatchCertificates;
+END
+GO
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes i
+    WHERE i.object_id = OBJECT_ID(N'scm.BatchCertificates')
+      AND i.name = N'UQ_BatchCertificates'
+)
+BEGIN
+    DROP INDEX UQ_BatchCertificates ON scm.BatchCertificates;
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes i
+    WHERE i.object_id = OBJECT_ID(N'scm.BatchCertificates')
+      AND i.name = N'UQ_BatchCertificates_BatchId'
+)
+BEGIN
+    CREATE UNIQUE INDEX UQ_BatchCertificates_BatchId
+        ON scm.BatchCertificates(BatchId);
+END
+GO
+
+CREATE OR ALTER TRIGGER scm.TR_BatchCertificates_BlockUpdateDelete
+ON scm.BatchCertificates
+INSTEAD OF DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    THROW 52020, 'DELETE on scm.BatchCertificates is not allowed.', 1;
+END
+GO
+
+CREATE OR ALTER PROCEDURE scm.usp_GetBatchesByCertificateId
+    @CertificateId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        b.BatchId,
+        b.BatchCode,
+        b.ProductName,
+        b.CurrentStatus,
+        bc.AttachedAt,
+        bc.AttachedBy
+    FROM scm.BatchCertificates bc
+    INNER JOIN scm.Batches b ON b.BatchId = bc.BatchId
+    WHERE bc.CertificateId = @CertificateId
+    ORDER BY bc.AttachedAt DESC;
+END
+GO
+
 SELECT 'DONE' AS ApplyVietnamTimeStatus;
 GO

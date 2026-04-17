@@ -46,7 +46,8 @@ public class TracePublicController : ControllerBase
                 return Content(RenderErrorPage($"Không tìm thấy thông tin lô hàng cho mã: {WebUtility.HtmlEncode(qrToken)}", 404), "text/html; charset=utf-8", Encoding.UTF8);
             }
 
-            var html = RenderPage(traceRows[0], traceRows);
+            var certificates = await _batchService.GetCertificatesByBatchCodeAsync(traceRows[0].BatchCode, cancellationToken);
+            var html = RenderPage(traceRows[0], traceRows, certificates);
             return Content(html, "text/html; charset=utf-8", Encoding.UTF8);
         }
         catch (Exception ex)
@@ -56,7 +57,7 @@ public class TracePublicController : ControllerBase
         }
     }
 
-    private static string RenderPage(TraceEventDto firstRow, IReadOnlyList<TraceEventDto> traceRows)
+    private static string RenderPage(TraceEventDto firstRow, IReadOnlyList<TraceEventDto> traceRows, IReadOnlyList<CertificateDto> certificates)
     {
         var builder = new StringBuilder();
         builder.AppendLine("<!doctype html>");
@@ -76,6 +77,10 @@ public class TracePublicController : ControllerBase
         builder.AppendLine(".item{padding:12px 14px;border-radius:14px;background:#101c31;border:1px solid #21334c;}");
         builder.AppendLine(".pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#18324f;color:#7dd3fc;font-size:12px;font-weight:700;}");
         builder.AppendLine(".small{display:block;margin-top:6px;color:#b7c8d8;font-size:14px;line-height:1.5;}");
+        builder.AppendLine(".certs{margin-top:14px;display:grid;gap:10px;}");
+        builder.AppendLine(".cert{padding:12px 14px;border-radius:14px;background:#101c31;border:1px solid #21334c;}");
+        builder.AppendLine(".cert-title{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#fff;font-weight:700;}");
+        builder.AppendLine(".cert-meta{display:block;margin-top:6px;color:#b7c8d8;font-size:14px;line-height:1.5;word-break:break-word;}");
         builder.AppendLine(".footer{margin-top:14px;color:#8ea7c1;font-size:12px;}");
         builder.AppendLine("</style>");
         builder.AppendLine("</head>");
@@ -114,6 +119,40 @@ public class TracePublicController : ControllerBase
             }
 
             builder.AppendLine("</div>");
+        }
+
+        builder.AppendLine("</div>");
+
+        builder.AppendLine("<div class='certs'>");
+        builder.AppendLine("<h2 style='margin:0;color:#f7fbff;font-size:18px;'>Chứng chỉ đính kèm</h2>");
+
+        if (certificates.Count == 0)
+        {
+            builder.AppendLine("<div class='item'><span class='small'>Chưa có chứng chỉ nào được gắn vào lô hàng này.</span></div>");
+        }
+        else
+        {
+            foreach (var certificate in certificates)
+            {
+                var attachedAtText = ToVietnamTime(certificate.AttachedAt).ToString("dd/MM/yyyy HH:mm:ss");
+                var issuedDateText = certificate.IssuedDate?.ToString("dd/MM/yyyy") ?? "-";
+                var expiredDateText = certificate.ExpiredDate?.ToString("dd/MM/yyyy") ?? "-";
+                var issuedByText = string.IsNullOrWhiteSpace(certificate.IssuedBy) ? "-" : certificate.IssuedBy;
+                var fileUrlText = string.IsNullOrWhiteSpace(certificate.FileUrl) ? null : certificate.FileUrl;
+
+                builder.AppendLine("<div class='cert'>");
+                builder.AppendLine($"<div class='cert-title'><span>{WebUtility.HtmlEncode(certificate.CertificateName)}</span><span>{WebUtility.HtmlEncode(certificate.CertificateCode)}</span></div>");
+                builder.AppendLine($"<span class='cert-meta'>Cấp bởi: {WebUtility.HtmlEncode(issuedByText)}</span>");
+                builder.AppendLine($"<span class='cert-meta'>Hiệu lực: {WebUtility.HtmlEncode(issuedDateText)} - {WebUtility.HtmlEncode(expiredDateText)}</span>");
+                builder.AppendLine($"<span class='cert-meta'>Gắn lúc: {WebUtility.HtmlEncode(attachedAtText)} bởi {WebUtility.HtmlEncode(certificate.AttachedBy)}</span>");
+
+                if (fileUrlText is not null)
+                {
+                    builder.AppendLine($"<span class='cert-meta'>File: <a style='color:#7dd3fc' href='{WebUtility.HtmlEncode(fileUrlText)}' target='_blank' rel='noopener noreferrer'>{WebUtility.HtmlEncode(fileUrlText)}</a></span>");
+                }
+
+                builder.AppendLine("</div>");
+            }
         }
 
         builder.AppendLine("</div>");

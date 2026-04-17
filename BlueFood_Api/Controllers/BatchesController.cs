@@ -1,5 +1,6 @@
 using BlueFood.Api.Models;
 using BlueFood.Api.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlueFood.Api.Controllers;
@@ -47,8 +48,15 @@ public class BatchesController : ControllerBase
             return BadRequest("BatchCode, CertificateId (>0), Actor are required.");
         }
 
-        await _batchService.AttachCertificateAsync(batchCode, request, cancellationToken);
-        return NoContent();
+        try
+        {
+            await _batchService.AttachCertificateAsync(batchCode, request, cancellationToken);
+            return NoContent();
+        }
+        catch (SqlException ex) when (ex.Number is 2601 or 2627)
+        {
+            return Conflict("Chứng chỉ này đã được gắn cho lô hàng hiện tại.");
+        }
     }
 
     [HttpGet("{batchCode}/certificates")]
