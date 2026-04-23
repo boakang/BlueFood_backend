@@ -14,6 +14,14 @@ erDiagram
     Batches ||--|| BatchQRCodes : "BatchId"
     Batches ||--o{ BatchCertificates : "BatchId"
     Certificates ||--o{ BatchCertificates : "CertificateId"
+    Users ||--o{ Batches : "CreatedBy (FK)"
+
+    Users {
+        int UserId PK
+        nvarchar(50) Username UK
+        nvarchar(255) PasswordHash
+        nvarchar(100) Email
+    }
 
     Partners {
         int PartnerId PK
@@ -32,7 +40,7 @@ erDiagram
         nvarchar(30) CurrentStatus
         date ProductionDate
         date ExpiryDate
-        nvarchar(100) CreatedBy
+        int CreatedBy FK
         datetime2(3) CreatedAt
     }
 
@@ -87,6 +95,16 @@ erDiagram
         varbinary(32) ThisHash
     }
 ```
+### `scm.Users`
+Mục đích: Lưu thông tin tài khoản người dùng hệ thống.
+
+| Column | Type | Null | Key | Description |
+|---|---|---|---|---|
+| UserId | int | No | PK | Mã định danh tài khoản |
+| Username | nvarchar(50) | No | UK | Tên đăng nhập duy nhất |
+| PasswordHash | nvarchar(255) | No |  | Mật khẩu đã mã hóa |
+| Email | nvarchar(100) | No |  | Địa chỉ email |
+
 
 ## Business Rules and Integrity
 
@@ -128,7 +146,7 @@ Mục đích: Thực thể lô hàng trung tâm phục vụ truy xuất nguồn 
 | CurrentStatus | nvarchar(30) | No |  | Trạng thái hiện tại gần nhất. |
 | ProductionDate | date | Yes |  | Ngày sản xuất. |
 | ExpiryDate | date | Yes |  | Ngày hết hạn. |
-| CreatedBy | nvarchar(100) | No |  | Người/tài khoản tạo lô. |
+| CreatedBy | nvarchar(50) | No | FK | Username của người tạo lô, liên kết scm.Users(Username) |
 | CreatedAt | datetime2(3) | No |  | Thời điểm tạo. |
 
 ### `scm.BatchEvents`

@@ -24,8 +24,19 @@ public class BatchesController : ControllerBase
             return BadRequest("BatchCode, ProductName, Actor are required.");
         }
 
-        var result = await _batchService.CreateBatchAsync(request, cancellationToken);
-        return Ok(result);
+        // Log giá trị Actor để debug
+        Console.WriteLine($"[DEBUG] API CreateBatch - BatchCode: '{request.BatchCode}', ProductName: '{request.ProductName}', Actor: '{request.Actor}'");
+
+        try
+        {
+            var result = await _batchService.CreateBatchAsync(request, cancellationToken);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] API CreateBatch: {ex}");
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
     }
 
     [HttpPost("{batchCode}/events")]

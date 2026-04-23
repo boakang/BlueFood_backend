@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+            .SetIsOriginAllowed(_ => true) // Allow localhost, LAN IP (phone on same WiFi), any origin
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

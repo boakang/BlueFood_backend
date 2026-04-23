@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using BlueFood.Api.Infrastructure;
 using BlueFood.Api.Models;
 using BlueFood.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -93,7 +94,8 @@ public class TracePublicController : ControllerBase
         builder.AppendLine($"<div><span class='label'>Product</span><span class='value'>{WebUtility.HtmlEncode(firstRow.ProductName)}</span></div>");
         builder.AppendLine($"<div><span class='label'>Status</span><span class='value'>{WebUtility.HtmlEncode(firstRow.CurrentStatus)}</span></div>");
         builder.AppendLine($"<div><span class='label'>QR token</span><span class='value'>{WebUtility.HtmlEncode(firstRow.QRToken)}</span></div>");
-        builder.AppendLine($"<div><span class='label'>Trace URL</span><span class='value'>{WebUtility.HtmlEncode(firstRow.TraceUrl)}</span></div>");
+        var computedTraceUrl = PublicTraceUrlBuilder.Build(firstRow.QRToken);
+        builder.AppendLine($"<div><span class='label'>Trace URL</span><span class='value'>{WebUtility.HtmlEncode(computedTraceUrl)}</span></div>");
         builder.AppendLine("</div>");
         builder.AppendLine("<div class='timeline'>");
 
